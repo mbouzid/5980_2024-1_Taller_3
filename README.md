@@ -2,7 +2,7 @@
 
 ## Instrucciones
 
-### Establecimiento 
+### Primer paso 
 * Clonar el repositorio 
 ```git clone https://github.com/mbouzid/5980_2024-1_Taller_3.git```
 * Crear la rama del grupo a partir de dev y cambiar a esa rama
