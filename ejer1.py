@@ -109,80 +109,71 @@ kmers_dict = decompose_fasta_to_kmers(fasta_file, k)
 print(len(kmers_dict))
 
 
+from collections import Counter
 import time
 
-def jaccard_index(listA, listB):
-    intersection = len(set(listA) & set(listB))
-    union = len(set(listA) | set(listB))
-    jaccard_similarity = intersection / union
-    return jaccard_similarity
+def jaccard_similarity(set1, set2):
+    intersection = len(set1.intersection(set2))
+    union = len(set1.union(set2))
+    return intersection / union if union != 0 else 0
+
+def kmerize(sequence, k):
+    return set(sequence[i:i+k] for i in range(len(sequence) - k + 1))
 
 def jaccard_index_kmers(kmers_A, kmers_B):
-    intersection = len(kmers_A.intersection(kmers_B))
-    union = len(kmers_A.union(kmers_B))
-    jaccard_similarity = intersection / union
-    return jaccard_similarity
+    return jaccard_similarity(kmers_A, kmers_B)
 
-def read_fasta(fasta_file):
+def fasta_to_kmers_similarity_matrix(fasta_file, k):
     sequences = {}
-    with open(fasta_file, 'r') as file:
-        lines = file.readlines()
-        current_id = None
-        current_sequence = ""
-        for line in lines:
-            line = line.strip()
+    kmers = {}
+    similarity_matrix = {}
+
+    # Leer el archivo fasta y obtener kmers para cada secuencia
+    with open(fasta_file, "r") as f:
+        sequence_id = ""
+        sequence = ""
+        for line in f:
             if line.startswith(">"):
-                if current_id:
-                    sequences[current_id] = current_sequence
-                current_id = line[1:]
-                current_sequence = ""
+                if sequence_id:
+                    sequences[sequence_id] = sequence
+                    kmers[sequence_id] = kmerize(sequence, k)
+                sequence_id = line.strip()[1:]
+                sequence = ""
             else:
-                current_sequence += line
-        # Add the last sequence
-        if current_id:
-            sequences[current_id] = current_sequence
-    return sequences
+                sequence += line.strip().upper()
+        # Agregar el último registro
+        if sequence_id:
+            sequences[sequence_id] = sequence
+            kmers[sequence_id] = kmerize(sequence, k)
 
-def decompose_to_kmers(sequence, k):
-    kmers = set()
-    for i in range(len(sequence) - k + 1):
-        kmer = sequence[i:i+k]
-        kmers.add(kmer)
-    return kmers
-
-def similarity_matrix(fasta_file, k):
-    sequences = read_fasta(fasta_file)
-    sequence_ids = list(sequences.keys())
-    num_sequences = len(sequence_ids)
-    similarity_matrix = [[0] * num_sequences for _ in range(num_sequences)]
-
-    # Calculate the k-mers for each sequence
-    kmers_dict = {}
-    for seq_id, sequence in sequences.items():
-        kmers_dict[seq_id] = decompose_to_kmers(sequence, k)
-
-    # Calculate Jaccard similarity for all pairs of sequences
-    for i in range(num_sequences):
-        for j in range(i + 1, num_sequences):
-            seq1_id = sequence_ids[i]
-            seq2_id = sequence_ids[j]
-            similarity = jaccard_index_kmers(kmers_dict[seq1_id], kmers_dict[seq2_id])
-            similarity_matrix[i][j] = similarity
-            similarity_matrix[j][i] = similarity
+    # Calcular la similitud para cada par de secuencias
+    for id_A, kmers_A in kmers.items():
+        similarity_matrix[id_A] = {}
+        for id_B, kmers_B in kmers.items():
+            similarity_matrix[id_A][id_B] = jaccard_index_kmers(kmers_A, kmers_B)
 
     return similarity_matrix
 
-# Ejemplo de uso con dos archivos FASTA
-fasta_files = [r"C:\Users\jorge\Documents\Taller_3_SJJA\5980_2024-1_Taller_3\data\xylefa8416.fasta", r"C:\Users\jorge\Documents\Taller_3_SJJA\5980_2024-1_Taller_3\data\xylefaco6c.fasta"]
-k_values = [7, 11]
+# Ejemplo de uso con archivos fasta de conjuntos A y B
+fasta_file_A = r"C:\Users\jorge\Documents\Taller_3_SJJA\5980_2024-1_Taller_3\data\xylefaco33.fasta"
+fasta_file_B = r"C:\Users\jorge\Documents\Taller_3_SJJA\5980_2024-1_Taller_3\data\xylefacodi.fasta"
 
-for fasta_file in fasta_files:
-    print(f"Archivo FASTA: {fasta_file}")
-    for k in k_values:
-        start_time = time.time()
-        sim_matrix = similarity_matrix(fasta_file, k)
-        execution_time = time.time() - start_time
-        print(f"\nMatriz de similitud para k={k}:")
-        for row in sim_matrix:
-            print(row)
-        print(f"Tiempo de ejecución para k={k}: {execution_time} segundos\n")
+# Calcular la matriz de similitud para k=7
+k_value = 7
+start_time = time.time()
+similarity_matrix_k7 = fasta_to_kmers_similarity_matrix(fasta_file_A, k_value)
+end_time = time.time()
+print("Matriz de similitud para k=7:")
+for id_A, sim_row in similarity_matrix_k7.items():
+    print(id_A, sim_row)
+print("Tiempo de ejecución para k=7:", end_time - start_time, "segundos")
+
+# Calcular la matriz de similitud para k=11
+k_value = 11
+start_time = time.time()
+similarity_matrix_k11 = fasta_to_kmers_similarity_matrix(fasta_file_A, k_value)
+end_time = time.time()
+print("\nMatriz de similitud para k=11:")
+for id_A, sim_row in similarity_matrix_k11.items():
+    print(id_A, sim_row)
+print("Tiempo de ejecución para k=11:", end_time - start_time, "segundos")

@@ -1,0 +1,5 @@
+Nombres de los integrantes:
+Santiago Andres Araque Alfonso, Juan David Moreno Suarez, Sofia Vargas Garzon, Jorge Enrique Lugo
+
+
+tocacambiar las rutas e¿de los archivos fasta en el código.
