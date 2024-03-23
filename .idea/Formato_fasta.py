@@ -10,10 +10,8 @@ class fasta():
         return self.nombre+" len="+str(self.longitud)+"\n"+self.secuencia
 with open(arch,"r") as file:
     all=file.read()
-    #print(all)
     Fastas=[]
     seccionado=all.split(">")
-    num_fastas=len(seccionado)
     for i in range(1,len(seccionado)):
         Posiciones=[]
         Posiciones.append(seccionado[i].find("T"))
